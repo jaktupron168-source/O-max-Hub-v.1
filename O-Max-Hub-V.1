@@ -1,0 +1,546 @@
+-- [[ CONFIGURATION ]]
+local Correct_Key = "Key-2026-Free-V0.1"
+local Discord_Invite = "https://discord.gg/sEqRXJYgX"
+local Script_Name = "O-max Hub"
+
+-- [[ SERVICES ]]
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local CoreGui = game:GetService("CoreGui")
+local Lighting = game:GetService("Lighting")
+
+-- [[ UI LIBRARY & SETUP ]]
+local sgui = Instance.new("ScreenGui")
+sgui.Name = "CustomScriptHub"
+sgui.ResetOnSpawn = false
+sgui.DisplayOrder = 100
+
+if gethui then
+    sgui.Parent = gethui()
+elseif syn and syn.protect_gui then
+    syn.protect_gui(sgui)
+    sgui.Parent = CoreGui
+else
+    sgui.Parent = CoreGui
+end
+
+local function makeDraggable(gui)
+    local dragging, dragInput, dragStart, startPos
+    local function update(input)
+        local delta = input.Position - dragStart
+        gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+    gui.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = gui.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+    gui.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then update(input) end
+    end)
+end
+
+---------------------------------------------------
+-- [[ 1. KEY SYSTEM UI ]]
+---------------------------------------------------
+local KeySystemFrame = Instance.new("Frame")
+KeySystemFrame.Size = UDim2.new(0, 200, 0, 140) 
+KeySystemFrame.Position = UDim2.new(0.5, -100, 0.2, 0)
+KeySystemFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 255)
+KeySystemFrame.Parent = sgui
+Instance.new("UICorner", KeySystemFrame)
+makeDraggable(KeySystemFrame)
+
+local KeyInput = Instance.new("TextBox")
+KeyInput.Size = UDim2.new(0, 170, 0, 40)
+KeyInput.Position = UDim2.new(0.5, -85, 0, 15)
+KeyInput.PlaceholderText = "ป้อนคีย์"
+KeyInput.TextSize = 18
+KeyInput.Parent = KeySystemFrame
+Instance.new("UICorner", KeyInput)
+
+local ConfirmBtn = Instance.new("TextButton")
+ConfirmBtn.Size = UDim2.new(0, 80, 0, 45)
+ConfirmBtn.Position = UDim2.new(0, 15, 0, 65)
+ConfirmBtn.Text = "ยืนยันคีย์"
+ConfirmBtn.Parent = KeySystemFrame
+Instance.new("UICorner", ConfirmBtn)
+
+local GetKeyBtn = Instance.new("TextButton")
+GetKeyBtn.Size = UDim2.new(0, 80, 0, 45)
+GetKeyBtn.Position = UDim2.new(1, -95, 0, 65)
+GetKeyBtn.Text = "ลิ้งค์เอาคีย์"
+GetKeyBtn.Parent = KeySystemFrame
+Instance.new("UICorner", GetKeyBtn)
+
+---------------------------------------------------
+-- [[ 2. MAIN HUB UI ]]
+---------------------------------------------------
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 450, 0, 320)
+MainFrame.Position = UDim2.new(0.5, -225, 0.5, -160)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 200)
+MainFrame.Visible = false
+MainFrame.Parent = sgui
+Instance.new("UICorner", MainFrame)
+makeDraggable(MainFrame)
+
+-- Top Bar
+local TopBar = Instance.new("Frame")
+TopBar.Size = UDim2.new(1, 0, 0, 40)
+TopBar.BackgroundTransparency = 1
+TopBar.Parent = MainFrame
+
+local UserIcon = Instance.new("ImageLabel")
+UserIcon.Size = UDim2.new(0, 30, 0, 30)
+UserIcon.Position = UDim2.new(0, 10, 0, 5)
+UserIcon.Parent = TopBar
+Instance.new("UICorner", UserIcon).CornerRadius = UDim.new(1, 0)
+pcall(function() UserIcon.Image = Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100) end)
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(0, 150, 0, 40)
+TitleLabel.Position = UDim2.new(0, 50, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = Script_Name
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 22
+TitleLabel.Font = Enum.Font.SourceSansBold
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = TopBar
+
+-- Sidebar
+local Sidebar = Instance.new("Frame")
+Sidebar.Size = UDim2.new(0, 110, 1, -45)
+Sidebar.Position = UDim2.new(0, 5, 0, 40)
+Sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 150)
+Sidebar.Parent = MainFrame
+Instance.new("UICorner", Sidebar)
+
+local PlayerTabBtn = Instance.new("TextButton")
+PlayerTabBtn.Size = UDim2.new(1, -10, 0, 40)
+PlayerTabBtn.Position = UDim2.new(0, 5, 0, 5)
+PlayerTabBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 255)
+PlayerTabBtn.Text = "ผู้เล่น"
+PlayerTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+PlayerTabBtn.TextSize = 20
+PlayerTabBtn.Font = Enum.Font.SourceSansBold
+PlayerTabBtn.Parent = Sidebar
+Instance.new("UICorner", PlayerTabBtn)
+
+local TeleportTabBtn = Instance.new("TextButton")
+TeleportTabBtn.Size = UDim2.new(1, -10, 0, 40)
+TeleportTabBtn.Position = UDim2.new(0, 5, 0, 50)
+TeleportTabBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 180)
+TeleportTabBtn.Text = "วาร์ป"
+TeleportTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+TeleportTabBtn.TextSize = 20
+TeleportTabBtn.Font = Enum.Font.SourceSansBold
+TeleportTabBtn.Parent = Sidebar
+Instance.new("UICorner", TeleportTabBtn)
+
+-- เพิ่มปุ่ม Settings Tab
+local SettingsTabBtn = Instance.new("TextButton")
+SettingsTabBtn.Size = UDim2.new(1, -10, 0, 40)
+SettingsTabBtn.Position = UDim2.new(0, 5, 0, 95)
+SettingsTabBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 180)
+SettingsTabBtn.Text = "ตั้งค่า"
+SettingsTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SettingsTabBtn.TextSize = 20
+SettingsTabBtn.Font = Enum.Font.SourceSansBold
+SettingsTabBtn.Parent = Sidebar
+Instance.new("UICorner", SettingsTabBtn)
+
+local LangBtn = Instance.new("TextButton")
+LangBtn.Size = UDim2.new(1, -10, 0, 35)
+LangBtn.Position = UDim2.new(0, 5, 1, -40)
+LangBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 180)
+LangBtn.Text = "ภาษา: ไทย"
+LangBtn.TextSize = 12
+LangBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+LangBtn.Parent = Sidebar
+Instance.new("UICorner", LangBtn)
+
+-- Content Area
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Size = UDim2.new(1, -130, 1, -50)
+ContentFrame.Position = UDim2.new(0, 120, 0, 45)
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.Parent = MainFrame
+
+-- [[ PAGES ]]
+local PlayerPage = Instance.new("Frame")
+PlayerPage.Size = UDim2.new(1, 0, 1, 0)
+PlayerPage.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
+PlayerPage.Visible = true
+PlayerPage.Parent = ContentFrame
+Instance.new("UICorner", PlayerPage)
+
+local TeleportPage = Instance.new("Frame")
+TeleportPage.Size = UDim2.new(1, 0, 1, 0)
+TeleportPage.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
+TeleportPage.Visible = false
+TeleportPage.Parent = ContentFrame
+Instance.new("UICorner", TeleportPage)
+
+local SettingsPage = Instance.new("Frame")
+SettingsPage.Size = UDim2.new(1, 0, 1, 0)
+SettingsPage.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
+SettingsPage.Visible = false
+SettingsPage.Parent = ContentFrame
+Instance.new("UICorner", SettingsPage)
+
+---------------------------------------------------
+-- [[ 3. FUNCTIONS & LOGIC ]]
+---------------------------------------------------
+
+local NoclipEnabled = false
+local SpeedEnabled = false
+local InfJumpEnabled = false
+local FullbrightEnabled = false
+local FpsBoosted = false
+local ShowFpsEnabled = false
+
+local CurrentSpeed = 16
+local MaxSpeedLimit = 1000
+local CurrentLang = "TH"
+
+-- FPS Counter UI (มุมบนขวา)
+local FpsLabel = Instance.new("TextLabel")
+FpsLabel.Size = UDim2.new(0, 100, 0, 30)
+FpsLabel.Position = UDim2.new(1, -110, 0, 10)
+FpsLabel.BackgroundTransparency = 1
+FpsLabel.Text = "FPS: 0"
+FpsLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+FpsLabel.TextStrokeTransparency = 0
+FpsLabel.TextSize = 22
+FpsLabel.Font = Enum.Font.SourceSansBold
+FpsLabel.Visible = false
+FpsLabel.Parent = sgui
+
+-- Tab Switch Logic
+local function ResetTabs()
+    PlayerPage.Visible = false
+    TeleportPage.Visible = false
+    SettingsPage.Visible = false
+    PlayerTabBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 180)
+    TeleportTabBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 180)
+    SettingsTabBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 180)
+end
+
+PlayerTabBtn.MouseButton1Click:Connect(function()
+    ResetTabs()
+    PlayerPage.Visible = true
+    PlayerTabBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 255)
+end)
+
+TeleportTabBtn.MouseButton1Click:Connect(function()
+    ResetTabs()
+    TeleportPage.Visible = true
+    TeleportTabBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 255)
+end)
+
+SettingsTabBtn.MouseButton1Click:Connect(function()
+    ResetTabs()
+    SettingsPage.Visible = true
+    SettingsTabBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 255)
+end)
+
+-- [[ PLAYER PAGE CONTENT ]]
+local NoclipBtn = Instance.new("TextButton")
+NoclipBtn.Size = UDim2.new(0, 160, 0, 50)
+NoclipBtn.Position = UDim2.new(0, 10, 0, 10)
+NoclipBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+NoclipBtn.Text = "เดินทะลุ: ปิด"
+NoclipBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+NoclipBtn.TextSize = 22
+NoclipBtn.Font = Enum.Font.SourceSansBold
+NoclipBtn.Parent = PlayerPage
+Instance.new("UICorner", NoclipBtn)
+
+local FlyBtn = Instance.new("TextButton")
+FlyBtn.Size = UDim2.new(0, 160, 0, 50)
+FlyBtn.Position = UDim2.new(0, 10, 0, 70)
+FlyBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
+FlyBtn.Text = "รันสคริปต์บิน"
+FlyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+FlyBtn.TextSize = 22
+FlyBtn.Font = Enum.Font.SourceSansBold
+FlyBtn.Parent = PlayerPage
+Instance.new("UICorner", FlyBtn)
+
+local SpeedBtn = Instance.new("TextButton")
+SpeedBtn.Size = UDim2.new(0, 160, 0, 50)
+SpeedBtn.Position = UDim2.new(0, 10, 0, 130)
+SpeedBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+SpeedBtn.Text = "วิ่งเร็ว: ปิด"
+SpeedBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpeedBtn.TextSize = 22
+SpeedBtn.Font = Enum.Font.SourceSansBold
+SpeedBtn.Parent = PlayerPage
+Instance.new("UICorner", SpeedBtn)
+
+local SpeedInput = Instance.new("TextBox")
+SpeedInput.Size = UDim2.new(0, 80, 0, 50)
+SpeedInput.Position = UDim2.new(0, 180, 0, 130)
+SpeedInput.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+SpeedInput.Text = "16"
+SpeedInput.PlaceholderText = "เร็ว..."
+SpeedInput.TextColor3 = Color3.fromRGB(0, 0, 0)
+SpeedInput.TextSize = 20
+SpeedInput.Font = Enum.Font.SourceSansBold
+SpeedInput.Parent = PlayerPage
+Instance.new("UICorner", SpeedInput)
+
+local InfJumpBtn = Instance.new("TextButton")
+InfJumpBtn.Size = UDim2.new(0, 160, 0, 50)
+InfJumpBtn.Position = UDim2.new(0, 10, 0, 190)
+InfJumpBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+InfJumpBtn.Text = "กระโดดไม่จำกัด: ปิด"
+InfJumpBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+InfJumpBtn.TextSize = 20
+InfJumpBtn.Font = Enum.Font.SourceSansBold
+InfJumpBtn.Parent = PlayerPage
+Instance.new("UICorner", InfJumpBtn)
+
+-- [[ TELEPORT PAGE CONTENT ]]
+local TpToPlayerBtn = Instance.new("TextButton")
+TpToPlayerBtn.Size = UDim2.new(0, 160, 0, 50)
+TpToPlayerBtn.Position = UDim2.new(0, 10, 0, 10)
+TpToPlayerBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+TpToPlayerBtn.Text = "วาร์ปไปหาคนอื่น"
+TpToPlayerBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+TpToPlayerBtn.TextSize = 18
+TpToPlayerBtn.Font = Enum.Font.SourceSansBold
+TpToPlayerBtn.Parent = TeleportPage
+Instance.new("UICorner", TpToPlayerBtn)
+
+local TargetPlayerInput = Instance.new("TextBox")
+TargetPlayerInput.Size = UDim2.new(0, 110, 0, 50)
+TargetPlayerInput.Position = UDim2.new(0, 180, 0, 10)
+TargetPlayerInput.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+TargetPlayerInput.PlaceholderText = "ชื่อผู้เล่น..."
+TargetPlayerInput.TextSize = 16
+TargetPlayerInput.Parent = TeleportPage
+Instance.new("UICorner", TargetPlayerInput)
+
+local TpToSpawnBtn = Instance.new("TextButton")
+TpToSpawnBtn.Size = UDim2.new(0, 160, 0, 50)
+TpToSpawnBtn.Position = UDim2.new(0, 10, 0, 70)
+TpToSpawnBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 200)
+TpToSpawnBtn.Text = "วาร์ปไปจุดเกิด"
+TpToSpawnBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+TpToSpawnBtn.TextSize = 18
+TpToSpawnBtn.Font = Enum.Font.SourceSansBold
+TpToSpawnBtn.Parent = TeleportPage
+Instance.new("UICorner", TpToSpawnBtn)
+
+-- [[ SETTINGS PAGE CONTENT ]]
+local FullbrightBtn = Instance.new("TextButton")
+FullbrightBtn.Size = UDim2.new(0, 160, 0, 50)
+FullbrightBtn.Position = UDim2.new(0, 10, 0, 10)
+FullbrightBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+FullbrightBtn.Text = "สว่าง: ปิด"
+FullbrightBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+FullbrightBtn.TextSize = 20
+FullbrightBtn.Font = Enum.Font.SourceSansBold
+FullbrightBtn.Parent = SettingsPage
+Instance.new("UICorner", FullbrightBtn)
+
+local FpsBoostBtn = Instance.new("TextButton")
+FpsBoostBtn.Size = UDim2.new(0, 160, 0, 50)
+FpsBoostBtn.Position = UDim2.new(0, 10, 0, 70)
+FpsBoostBtn.BackgroundColor3 = Color3.fromRGB(200, 100, 0)
+FpsBoostBtn.Text = "Boot FPS"
+FpsBoostBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+FpsBoostBtn.TextSize = 20
+FpsBoostBtn.Font = Enum.Font.SourceSansBold
+FpsBoostBtn.Parent = SettingsPage
+Instance.new("UICorner", FpsBoostBtn)
+
+local ShowFpsBtn = Instance.new("TextButton")
+ShowFpsBtn.Size = UDim2.new(0, 160, 0, 50)
+ShowFpsBtn.Position = UDim2.new(0, 10, 0, 130)
+ShowFpsBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+ShowFpsBtn.Text = "แสดง FPS: ปิด"
+ShowFpsBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ShowFpsBtn.TextSize = 20
+ShowFpsBtn.Font = Enum.Font.SourceSansBold
+ShowFpsBtn.Visible = false -- ซ่อนไว้จนกว่าจะกด Boot FPS
+ShowFpsBtn.Parent = SettingsPage
+Instance.new("UICorner", ShowFpsBtn)
+
+
+-- [[ GLOBAL FUNCTIONS ]]
+function UpdateLanguage()
+    if CurrentLang == "TH" then
+        LangBtn.Text = "ภาษา: ไทย"
+        PlayerTabBtn.Text = "ผู้เล่น"
+        TeleportTabBtn.Text = "วาร์ป"
+        SettingsTabBtn.Text = "ตั้งค่า"
+        FlyBtn.Text = "รันสคริปต์บิน"
+        NoclipBtn.Text = NoclipEnabled and "เดินทะลุ: เปิด" or "เดินทะลุ: ปิด"
+        SpeedBtn.Text = SpeedEnabled and "วิ่งเร็ว: เปิด" or "วิ่งเร็ว: ปิด"
+        InfJumpBtn.Text = InfJumpEnabled and "กระโดดไม่จำกัด: เปิด" or "กระโดดไม่จำกัด: ปิด"
+        FullbrightBtn.Text = FullbrightEnabled and "สว่าง: เปิด" or "สว่าง: ปิด"
+        ShowFpsBtn.Text = ShowFpsEnabled and "แสดง FPS: เปิด" or "แสดง FPS: ปิด"
+        if FpsBoosted then FpsBoostBtn.Text = "Boot FPS: เปิดแล้ว" else FpsBoostBtn.Text = "Boot FPS" end
+        TpToPlayerBtn.Text = "วาร์ปไปหาคนอื่น"
+        TpToSpawnBtn.Text = "วาร์ปไปจุดเกิด"
+        GetKeyBtn.Text = "ลิ้งค์เอาคีย์"
+    else
+        LangBtn.Text = "Language: EN"
+        PlayerTabBtn.Text = "Player"
+        TeleportTabBtn.Text = "Teleport"
+        SettingsTabBtn.Text = "Settings"
+        FlyBtn.Text = "Run Fly Script"
+        NoclipBtn.Text = NoclipEnabled and "Noclip: ON" or "Noclip: OFF"
+        SpeedBtn.Text = SpeedEnabled and "Speed: ON" or "Speed: OFF"
+        InfJumpBtn.Text = InfJumpEnabled and "Infinite Jump: ON" or "Infinite Jump: OFF"
+        FullbrightBtn.Text = FullbrightEnabled and "Fullbright: ON" or "Fullbright: OFF"
+        ShowFpsBtn.Text = ShowFpsEnabled and "Show FPS: ON" or "Show FPS: OFF"
+        if FpsBoosted then FpsBoostBtn.Text = "Boot FPS: DONE" else FpsBoostBtn.Text = "Boot FPS" end
+        TpToPlayerBtn.Text = "Teleport to Player"
+        TpToSpawnBtn.Text = "Teleport to Spawn"
+        GetKeyBtn.Text = "Get Key"
+    end
+end
+
+LangBtn.MouseButton1Click:Connect(function()
+    CurrentLang = (CurrentLang == "TH") and "EN" or "TH"
+    UpdateLanguage()
+end)
+
+-- LOGIC: Player 
+local function SetWalkSpeed()
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.WalkSpeed = SpeedEnabled and (tonumber(CurrentSpeed) or 16) or 16
+    end
+end
+
+SpeedInput.FocusLost:Connect(function()
+    local val = tonumber(SpeedInput.Text)
+    if val then
+        if val > MaxSpeedLimit then val = MaxSpeedLimit SpeedInput.Text = tostring(MaxSpeedLimit) end
+        CurrentSpeed = val
+        if SpeedEnabled then SetWalkSpeed() end
+    else
+        SpeedInput.Text = tostring(CurrentSpeed)
+    end
+end)
+
+SpeedBtn.MouseButton1Click:Connect(function()
+    SpeedEnabled = not SpeedEnabled
+    SpeedBtn.BackgroundColor3 = SpeedEnabled and Color3.fromRGB(0, 180, 0) or Color3.fromRGB(200, 0, 0)
+    SetWalkSpeed()
+    UpdateLanguage()
+end)
+
+RunService.RenderStepped:Connect(SetWalkSpeed)
+
+RunService.Stepped:Connect(function()
+    if NoclipEnabled and LocalPlayer.Character then
+        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") and part.CanCollide then
+                if part.Name ~= "Terrain" and part.Name ~= "Baseplate" then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end
+end)
+
+NoclipBtn.MouseButton1Click:Connect(function()
+    NoclipEnabled = not NoclipEnabled
+    NoclipBtn.BackgroundColor3 = NoclipEnabled and Color3.fromRGB(0, 180, 0) or Color3.fromRGB(200, 0, 0)
+    if not NoclipEnabled and LocalPlayer.Character then
+        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") then part.CanCollide = true end
+        end
+    end
+    UpdateLanguage()
+end)
+
+FlyBtn.MouseButton1Click:Connect(function()
+    loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Fly-v3-GUI-148298"))()
+end)
+
+UserInputService.JumpRequest:Connect(function()
+    if InfJumpEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end)
+
+InfJumpBtn.MouseButton1Click:Connect(function()
+    InfJumpEnabled = not InfJumpEnabled
+    InfJumpBtn.BackgroundColor3 = InfJumpEnabled and Color3.fromRGB(0, 180, 0) or Color3.fromRGB(200, 0, 0)
+    UpdateLanguage()
+end)
+
+-- LOGIC: Teleport
+TpToPlayerBtn.MouseButton1Click:Connect(function()
+    local targetName = TargetPlayerInput.Text
+    for _, v in pairs(Players:GetPlayers()) do
+        if v.Name:lower():find(targetName:lower()) and v ~= LocalPlayer then
+            if v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                LocalPlayer.Character.HumanoidRootPart.CFrame = v.Character.HumanoidRootPart.CFrame
+            end
+            break
+        end
+    end
+end)
+
+TpToSpawnBtn.MouseButton1Click:Connect(function()
+    local spawn = workspace:FindFirstChildOfClass("SpawnLocation")
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        if spawn then
+            LocalPlayer.Character.HumanoidRootPart.CFrame = spawn.CFrame + Vector3.new(0, 5, 0)
+        else
+            LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(0, 10, 0)
+        end
+    end
+end)
+
+-- LOGIC: Settings
+RunService.RenderStepped:Connect(function()
+    if FullbrightEnabled then
+        Lighting.Ambient = Color3.new(1, 1, 1)
+        Lighting.ColorShift_Bottom = Color3.new(1, 1, 1)
+        Lighting.ColorShift_Top = Color3.new(1, 1, 1)
+    end
+end)
+
+FullbrightBtn.MouseButton1Click:Connect(function()
+    FullbrightEnabled = not FullbrightEnabled
+    FullbrightBtn.BackgroundColor3 = FullbrightEnabled and Color3.fromRGB(0, 180, 0) or Color3.fromRGB(200, 0, 0)
+    UpdateLanguage()
+end)
+
+FpsBoostBtn.MouseButton1Click:Connect(function()
+    if not FpsBoosted then
+        FpsBoosted = true
+        FpsBoostBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+        ShowFpsBtn.Visible = true -- แสดงปุ่มเปิดปิด FPS
+        UpdateLanguage()
+        
+        -- ทำงาน Boost FPS
+        local Terrain = workspace:FindFirstChildOfClass('Terrain')
+        if Terrain then
+            Terrain.WaterWaveSize = 0
+            Terrain.WaterWaveSpeed = 0
+            Terrain.WaterReflectance = 0
+            Terrain.WaterTransparency = 0
+        end
+
